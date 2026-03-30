@@ -1,8 +1,6 @@
 # rop-gadget
 
-This repository is a Go port of the Python `ROPgadget` project, built as a library first and then exposed through a Cobra-based CLI in [`./cli`](/Users/moloch/git/rop-gadget/cli/main.go).
-
-The Python tree in [`./ROPgadget`](/Users/moloch/git/rop-gadget/ROPgadget) is kept only as a reference implementation during the port. The Go code does not import that Python code. The copied fixture corpus used by the Go tests lives under [`./testdata/test-suite-binaries`](/Users/moloch/git/rop-gadget/testdata/test-suite-binaries).
+This repository is a Go port of the Python [`ROPgadget`](https://github.com/JonathanSalwan/ROPgadget) project, built as a Go library first and then exposed through a CLI in [`./cli`](/Users/moloch/git/rop-gadget/cli/main.go).
 
 ## Features
 
@@ -35,16 +33,10 @@ If you move this repository to another machine, update those `replace` paths or 
 
 ## Build
 
-Show CLI help:
-
-```bash
-env GOCACHE=/tmp/rop-gadget-gocache GOSUMDB=off go run ./cli --help
-```
-
 Build the CLI binary:
 
 ```bash
-env GOCACHE=/tmp/rop-gadget-gocache GOSUMDB=off go build -o ./bin/ROPgadget ./cli
+go build -trimpath -o ./bin/rop-gadget ./cli
 ```
 
 ## CLI Usage
@@ -52,32 +44,27 @@ env GOCACHE=/tmp/rop-gadget-gocache GOSUMDB=off go build -o ./bin/ROPgadget ./cl
 Basic gadget search:
 
 ```bash
-env GOCACHE=/tmp/rop-gadget-gocache GOSUMDB=off \
-  go run ./cli --binary ./testdata/test-suite-binaries/elf-Linux-x86
+rop-gadget --binary ./testdata/test-suite-binaries/elf-Linux-x86
 ```
 
 Search a raw x86 blob:
 
 ```bash
-env GOCACHE=/tmp/rop-gadget-gocache GOSUMDB=off \
-  go run ./cli --binary ./testdata/test-suite-binaries/raw-x86.raw --rawArch=x86 --rawMode=32
+rop-gadget --binary ./testdata/test-suite-binaries/raw-x86.raw --rawArch=x86 --rawMode=32
 ```
 
 Generate an x86 ELF ROP chain:
 
 ```bash
-env GOCACHE=/tmp/rop-gadget-gocache GOSUMDB=off \
-  go run ./cli --binary ./testdata/test-suite-binaries/elf-Linux-x86 --ropchain
+rop-gadget --binary ./testdata/test-suite-binaries/elf-Linux-x86 --ropchain
 ```
 
 String and opcode searches:
 
 ```bash
-env GOCACHE=/tmp/rop-gadget-gocache GOSUMDB=off \
-  go run ./cli --binary ./testdata/test-suite-binaries/elf-Linux-x86 --string main
+rop-gadget --binary ./testdata/test-suite-binaries/elf-Linux-x86 --string main
 
-env GOCACHE=/tmp/rop-gadget-gocache GOSUMDB=off \
-  go run ./cli --binary ./testdata/test-suite-binaries/elf-Linux-x86 --opcode c9c3
+rop-gadget --binary ./testdata/test-suite-binaries/elf-Linux-x86 --opcode c9c3
 ```
 
 ## Library Usage
