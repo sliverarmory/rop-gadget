@@ -18,7 +18,7 @@ func NewCommand() *cobra.Command {
 	var checkUpdateFlag bool
 
 	cmd := &cobra.Command{
-		Use:   "ROPgadget",
+		Use:   "rop-gadget",
 		Short: "Search gadgets in binaries",
 		Long: `description:
   ROPgadget lets you search your gadgets on a binary. It supports several
@@ -43,16 +43,16 @@ architectures supported:
   - RISC-V Compressed
 `,
 		Example: strings.Join([]string{
-			"ROPgadget --binary ./test-suite-binaries/elf-Linux-x86",
-			"ROPgadget --binary ./test-suite-binaries/elf-Linux-x86 --ropchain",
-			"ROPgadget --binary ./test-suite-binaries/elf-Linux-x86 --depth 3",
-			"ROPgadget --binary ./test-suite-binaries/elf-Linux-x86 --string \"main\"",
-			"ROPgadget --binary ./test-suite-binaries/elf-Linux-x86 --string \"m..n\"",
-			"ROPgadget --binary ./test-suite-binaries/elf-Linux-x86 --opcode c9c3",
-			"ROPgadget --binary ./test-suite-binaries/elf-Linux-x86 --only \"mov|ret\"",
-			"ROPgadget --binary ./test-suite-binaries/elf-Linux-x86 --filter \"xchg|add|sub|cmov.*\"",
-			"ROPgadget --binary ./test-suite-binaries/elf-Linux-x86 --norop --nosys",
-			"ROPgadget --binary ./test-suite-binaries/raw-x86.raw --rawArch=x86 --rawMode=32",
+			"rop-gadget --binary ./test-suite-binaries/elf-Linux-x86",
+			"rop-gadget --binary ./test-suite-binaries/elf-Linux-x86 --ropchain",
+			"rop-gadget --binary ./test-suite-binaries/elf-Linux-x86 --depth 3",
+			"rop-gadget --binary ./test-suite-binaries/elf-Linux-x86 --string \"main\"",
+			"rop-gadget --binary ./test-suite-binaries/elf-Linux-x86 --string \"m..n\"",
+			"rop-gadget --binary ./test-suite-binaries/elf-Linux-x86 --opcode c9c3",
+			"rop-gadget --binary ./test-suite-binaries/elf-Linux-x86 --only \"mov|ret\"",
+			"rop-gadget --binary ./test-suite-binaries/elf-Linux-x86 --filter \"xchg|add|sub|cmov.*\"",
+			"rop-gadget --binary ./test-suite-binaries/elf-Linux-x86 --norop --nosys",
+			"rop-gadget --binary ./test-suite-binaries/raw-x86.raw --rawArch=x86 --rawMode=32",
 		}, "\n"),
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
