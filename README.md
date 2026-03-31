@@ -1,6 +1,6 @@
 # rop-gadget
 
-This repository is a Go port of the Python [`ROPgadget`](https://github.com/JonathanSalwan/ROPgadget) project, built as a Go library first and then exposed through a CLI in [`./cli`](/Users/moloch/git/rop-gadget/cli/main.go).
+This repository is a Go port of the Python [`ROPgadget`](https://github.com/JonathanSalwan/ROPgadget) project, built as a Go library first and then exposed through a CLI in [`./cli`](./cli/main.go).
 
 ## Features
 
@@ -14,22 +14,22 @@ This repository is a Go port of the Python [`ROPgadget`](https://github.com/Jona
 
 ## Layout
 
-- [`analyze.go`](/Users/moloch/git/rop-gadget/analyze.go): top-level analysis entrypoint
-- [`binary.go`](/Users/moloch/git/rop-gadget/binary.go): binary loading and section extraction
-- [`gadgetfinder.go`](/Users/moloch/git/rop-gadget/gadgetfinder.go): gadget discovery and validation
-- [`ropchain.go`](/Users/moloch/git/rop-gadget/ropchain.go): x86/x64 ELF ROP-chain generation
-- [`command.go`](/Users/moloch/git/rop-gadget/command.go): Cobra command wiring
-- [`cli/main.go`](/Users/moloch/git/rop-gadget/cli/main.go): CLI entrypoint
-- [`analyze_test.go`](/Users/moloch/git/rop-gadget/analyze_test.go): fixture, synthetic, and interoperability tests
+- [`analyze.go`](./analyze.go): top-level analysis entrypoint
+- [`binary.go`](./binary.go): binary loading and section extraction
+- [`gadgetfinder.go`](./gadgetfinder.go): gadget discovery and validation
+- [`ropchain.go`](./ropchain.go): x86/x64 ELF ROP-chain generation
+- [`command.go`](./command.go): Cobra command wiring
+- [`cli/main.go`](./cli/main.go): CLI entrypoint
+- [`analyze_test.go`](./analyze_test.go): fixture, synthetic, and interoperability tests
 
 ## Dependencies
 
-The module currently uses local `replace` directives in [`go.mod`](/Users/moloch/git/rop-gadget/go.mod) for:
+The module depends on the following packages:
 
 - `github.com/moloch--/go-capstone`
 - `github.com/moloch--/go-keystone`
 
-If you move this repository to another machine, update those `replace` paths or remove them and depend on published module versions instead.
+These dependencies are resolved through standard Go module configuration.
 
 ## Build
 
