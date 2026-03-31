@@ -1,0 +1,236 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_VERSION: ${{ github.ref_name }}
+  BINARY_BASENAME: rop-gadget
+
+jobs:
+  verify-tag-on-main:
+    name: Verify Tag Is On main
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check Out Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate Tag Format And Branch
+        run: |
+          if ! printf '%s\n' "${GITHUB_REF_NAME}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$'; then
+            echo "Tag ${GITHUB_REF_NAME} is not a supported release tag."
+            exit 1
+          fi
+
+          git fetch origin main --depth=1
+          TAG_COMMIT="$(git rev-list -n 1 "${GITHUB_REF}")"
+
+          if ! git merge-base --is-ancestor "${TAG_COMMIT}" origin/main; then
+            echo "Tagged commit ${TAG_COMMIT} is not reachable from origin/main."
+            exit 1
+          fi
+
+  build-cli:
+    name: Build ${{ matrix.goos }}-${{ matrix.goarch }}
+    needs:
+      - verify-tag-on-main
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: 386
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: mips
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: mips64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: mips64le
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: mipsle
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: ppc64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: ppc64le
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: riscv64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: s390x
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: darwin
+            goarch: amd64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: darwin
+            goarch: arm64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: freebsd
+            goarch: amd64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: freebsd
+            goarch: arm64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: openbsd
+            goarch: amd64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: openbsd
+            goarch: arm64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: netbsd
+            goarch: amd64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: netbsd
+            goarch: arm64
+            cgo_enabled: "0"
+          - runner: macos-latest
+            goos: ios
+            goarch: arm64
+            cgo_enabled: "1"
+          - runner: ubuntu-latest
+            goos: android
+            goarch: arm64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: dragonfly
+            goarch: amd64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: plan9
+            goarch: amd64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: solaris
+            goarch: amd64
+            cgo_enabled: "0"
+          - runner: ubuntu-latest
+            goos: windows
+            goarch: 386
+            cgo_enabled: "0"
+            extension: .exe
+          - runner: ubuntu-latest
+            goos: windows
+            goarch: amd64
+            cgo_enabled: "0"
+            extension: .exe
+          - runner: ubuntu-latest
+            goos: windows
+            goarch: arm64
+            cgo_enabled: "0"
+            extension: .exe
+
+    steps:
+      - name: Check Out Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Prepare Module Graph For CI
+        run: |
+          go mod edit -dropreplace github.com/moloch--/go-capstone
+          go mod edit -dropreplace github.com/moloch--/go-keystone
+          go mod download
+
+      - name: Build CLI
+        env:
+          CGO_ENABLED: ${{ matrix.cgo_enabled }}
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          EXTENSION: ${{ matrix.extension }}
+        run: |
+          mkdir -p dist
+          OUTPUT="dist/${BINARY_BASENAME}_${GOOS}-${GOARCH}${EXTENSION}"
+          go build \
+            -trimpath \
+            -o "${OUTPUT}" \
+            ./cli
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/${{ env.BINARY_BASENAME }}_${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.extension }}
+          if-no-files-found: error
+          retention-days: 5
+
+  tagged-release:
+    name: Tagged Release
+    needs:
+      - verify-tag-on-main
+      - build-cli
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check Out Code
+        uses: actions/checkout@v4
+
+      - name: Collect Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          pattern: build-*
+          merge-multiple: true
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "${RELEASE_VERSION}" >/dev/null 2>&1; then
+            gh release create "${RELEASE_VERSION}" \
+              --target "${GITHUB_SHA}" \
+              --title "${RELEASE_VERSION}" \
+              --generate-notes
+          fi
+
+      - name: Upload Release Assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${RELEASE_VERSION}" release/* --clobber
